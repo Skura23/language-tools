@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>French Trainer · 顺序卡片</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #f6f8fa;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            padding: 1.5rem 1rem 3rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .app {
+            max-width: 1400px;
+            width: 100%;
+        }
+        h1 {
+            font-weight: 500;
+            font-size: 1.8rem;
+            letter-spacing: -0.5px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem 1rem;
+            background: white;
+            padding: 1rem 1.25rem;
+            border-radius: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            margin-bottom: 2rem;
+            align-items: center;
+            border: 1px solid #e9edf2;
+        }
+        .toolbar label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .toolbar textarea {
+            flex: 1 1 280px;
+            min-width: 180px;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid #d0d7de;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            resize: vertical;
+            background: #fafbfc;
+            transition: 0.2s;
+        }
+        .toolbar textarea:focus {
+            border-color: #3b82f6;
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .btn {
+            background: white;
+            border: 1px solid #d0d7de;
+            padding: 0.4rem 1rem;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #1e293b;
+            cursor: pointer;
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #f8fafc;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+        .btn:hover {
+            background: #eef2f6;
+            border-color: #b0b9c4;
+        }
+        .btn-primary {
+            background: #1e293b;
+            border-color: #1e293b;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #0f172a;
+            border-color: #0f172a;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #d0d7de;
+        }
+        .btn-outline:hover {
+            background: #f1f4f8;
+        }
+        .stats {
+            margin-left: auto;
+            font-size: 0.85rem;
+            color: #475569;
+            background: #f1f4f8;
+            padding: 0.2rem 0.9rem;
+            border-radius: 40px;
+            white-space: nowrap;
+        }
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 1.2rem;
+            margin-top: 0.5rem;
+        }
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 1.2rem 0.8rem 0.9rem;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.03);
+            border: 1px solid #eef2f6;
+            transition: 0.1s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            cursor: default;
+        }
+        .card:hover {
+            border-color: #d5dce6;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.04);
+        }
+        .card-word {
+            font-size: 1.25rem;
+            font-weight: 550;
+            color: #0b1e33;
+            padding: 0.25rem 0.1rem;
+            word-break: break-word;
+            width: 100%;
+            min-height: 3.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.15s;
+            user-select: text;
+            cursor: pointer;
+            border-radius: 16px;
+            background: #fafcff;
+            padding: 0.3rem 0.2rem;
+            filter: blur(0px);
+        }
+        /* 模糊度加深：通过 data-blur 动态控制 */
+        .card-word.blur-1 { filter: blur(1px); }
+        .card-word.blur-2 { filter: blur(2px); }
+        .card-word.blur-3 { filter: blur(3px); }
+        .card-word.blur-4 { filter: blur(4px); }
+        .card-word.blur-5 { filter: blur(5px); }
+        .card-word.blur-6 { filter: blur(6px); }
+        .card-word.blur-7 { filter: blur(7px); }
+        .card-word.blur-8 { filter: blur(8px); }
+        .card-word.blur-9 { filter: blur(9px); }
+        .card-word.blur-10 { filter: blur(10px); }
+
+        .card-word.hidden {
+            filter: blur(8px) !important;  /* 模糊到看不清 */
+            color: #8896a8;
+            background: #f1f5f9;
+            user-select: none;
+            cursor: pointer;
+        }
+        .card-en {
+            font-size: 0.95rem;
+            color: #1e3a5f;
+            margin-top: 0.2rem;
+            padding: 0.2rem 0.4rem;
+            border-radius: 30px;
+            background: #f1f6fd;
+            width: 100%;
+            word-break: break-word;
+            min-height: 2.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.1s;
+        }
+        .card-en.hidden {
+            display: none;
+        }
+        .card-input {
+            width: 100%;
+            margin-top: 0.6rem;
+            padding: 0.45rem 0.6rem;
+            border: 1px solid #dbe0e8;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            background: #fafcff;
+            transition: 0.15s;
+            text-align: center;
+            min-width: 0;
+            width: 100%;
+        }
+        .card-input:focus {
+            border-color: #3b82f6;
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+        }
+        .card-input.correct {
+            border-color: #22a65e;
+            background: #ecfdf3;
+        }
+        .card-input.wrong {
+            border-color: #dc4c4c;
+            background: #fef0f0;
+        }
+        .card-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.3rem 0.6rem;
+            margin-top: 0.5rem;
+            width: 100%;
+            font-size: 0.75rem;
+        }
+        .card-actions .btn-sm {
+            background: transparent;
+            border: none;
+            padding: 0.1rem 0.3rem;
+            color: #4b5a6e;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border-radius: 20px;
+        }
+        .card-actions .btn-sm:hover {
+            background: #e9edf4;
+            color: #0b1e33;
+        }
+        .favorite-star {
+            color: #f5b342;
+            font-size: 1rem;
+            margin-left: 2px;
+        }
+        .footer-bar {
+            margin-top: 2.8rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem 1.5rem;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 1.8rem;
+        }
+        .footer-bar .btn {
+            font-size: 0.8rem;
+        }
+        #exportArea {
+            width: 100%;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 16px;
+            border: 1px solid #dbe0e8;
+            font-family: monospace;
+            font-size: 0.8rem;
+            background: #f8fafc;
+            resize: vertical;
+            min-height: 60px;
+        }
+        @media (max-width: 520px) {
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .stats { margin-left: 0; text-align: center; }
+            .card-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+        }
+    </style>
+</head>
+<body>
+<div class="app" id="app">
+    <h1>
+        <span>🇫🇷 French Trainer</span>
+        <span style="font-size: 0.9rem; font-weight: 400; color: #475569;">顺序 · 模糊记忆</span>
+    </h1>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <label>📝 数据
+            <textarea id="dataInput" rows="2" placeholder="法语&#9;英语&#10;bonjour&#9;hello">bonjour	hello
+merci	thank you
+au revoir	goodbye
+oui	yes
+non	no
+chat	cat
+chien	dog
+maison	house
+voiture	car
+fleur	flower</textarea>
+        </label>
+        <div class="btn-group">
+            <button class="btn btn-primary" id="generateBtn">🔄 生成卡片</button>
+            <button class="btn btn-outline" id="speakBtn">🔊 发音 (fr-CA)</button>
+            <button class="btn btn-outline" id="toggleLangBtn">🇫🇷/🇬🇧 EN</button>
+            <button class="btn btn-outline" id="toggleEnBtn">📖 显示EN</button>
+            <button class="btn btn-outline" id="favoriteExportBtn">⭐ 导出收藏</button>
+        </div>
+        <span class="stats" id="statsDisplay">0 张卡片</span>
+    </div>
+
+    <!-- 卡片网格 -->
+    <div id="cardGrid" class="card-grid"></div>
+
+    <!-- 底部导出区 -->
+    <div class="footer-bar">
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="btn btn-outline" id="clearFavBtn">🗑️ 清空收藏</button>
+            <button class="btn btn-outline" id="copyExportBtn">📋 复制导出</button>
+        </div>
+        <span style="font-size: 0.8rem; color: #64748b;">点击单词切换模糊/清晰 · 输入框实时反馈</span>
+    </div>
+    <textarea id="exportArea" readonly placeholder="收藏的卡片会显示在这里 (fr tab en)"></textarea>
+</div>
+<script>
+    (function() {
+        // ----- 状态 -----
+        let cards = [];                 // 原始数据 [{fr, en}]
+        let orderedCards = [];          // 按导入顺序
+        let favorites = new Set();     // 存储 fr+en 作为key
+        let showEn = true;            
+        let langMode = 'fr';          // 'fr' 或 'en' 
+        let speechSynth = window.speechSynthesis;
+
+        // DOM 引用
+        const grid = document.getElementById('cardGrid');
+        const dataInput = document.getElementById('dataInput');
+        const generateBtn = document.getElementById('generateBtn');
+        const speakBtn = document.getElementById('speakBtn');
+        const toggleLangBtn = document.getElementById('toggleLangBtn');
+        const toggleEnBtn = document.getElementById('toggleEnBtn');
+        const favoriteExportBtn = document.getElementById('favoriteExportBtn');
+        const clearFavBtn = document.getElementById('clearFavBtn');
+        const copyExportBtn = document.getElementById('copyExportBtn');
+        const exportArea = document.getElementById('exportArea');
+        const statsDisplay = document.getElementById('statsDisplay');
+
+        // ----- 辅助 -----
+        function parseTabText(text) {
+            const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+            const result = [];
+            for (let line of lines) {
+                const parts = line.split('\t');
+                if (parts.length >= 2) {
+                    const fr = parts[0].trim();
+                    const en = parts.slice(1).join('\t').trim();
+                    if (fr && en) result.push({ fr, en });
+                }
+            }
+            return result;
+        }
+
+        // 更新统计
+        function updateStats() {
+            statsDisplay.textContent = `${orderedCards.length} 张卡片`;
+        }
+
+        // 生成卡片 (保持顺序)
+        function generateCards() {
+            const raw = dataInput.value;
+            const parsed = parseTabText(raw);
+            if (parsed.length === 0) {
+                alert('请至少输入一对 法语\t英语');
+                return;
+            }
+            cards = parsed;
+            orderedCards = [...cards];   // 按导入顺序
+            renderCards();
+            updateStats();
+        }
+
+        // 渲染卡片
+        function renderCards() {
+            if (orderedCards.length === 0) {
+                grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#94a3b8; padding:2.5rem;">暂无卡片，请点击「生成卡片」</div>`;
+                return;
+            }
+
+            let html = '';
+            orderedCards.forEach((item, index) => {
+                const fr = item.fr;
+                const en = item.en;
+                const key = fr + '||' + en;
+                const isFav = favorites.has(key);
+                // 主显示: 根据 langMode
+                let mainDisplay = (langMode === 'fr') ? fr : en;
+                let secondaryDisplay = (langMode === 'fr') ? en : fr;
+
+                // 默认隐藏 (模糊)  使用 hidden 类 + blur-8 (模糊到看不清)
+                const hiddenClass = 'hidden blur-8'; 
+                // 但我们需要初始为隐藏 (模糊), 点击后切换为清晰 (移除 hidden 和 blur 类)
+                // 我们将在卡片上存储状态: data-hidden="true"
+                html += `<div class="card" data-index="${index}" data-fr="${fr.replace(/"/g, '&quot;')}" data-en="${en.replace(/"/g, '&quot;')}">
+                    <div class="card-word hidden blur-8" data-hidden="true">${mainDisplay}</div>
+                    <div class="card-en ${showEn ? '' : 'hidden'}">${secondaryDisplay}</div>
+                    <input class="card-input" type="text" placeholder="输入..." autocomplete="off" />
+                    <div class="card-actions">
+                        <span class="btn-sm favorite-toggle" style="cursor:pointer;">${isFav ? '⭐' : '☆'}</span>
+                        <span class="btn-sm speak-word" style="cursor:pointer;">🔊</span>
+                        <span class="btn-sm card-index" style="color:#94a3b8;">#${index+1}</span>
+                    </div>
+                </div>`;
+            });
+            grid.innerHTML = html;
+
+            // 绑定事件
+            grid.querySelectorAll('.card').forEach(cardEl => {
+                const wordEl = cardEl.querySelector('.card-word');
+                const enEl = cardEl.querySelector('.card-en');
+                const inputEl = cardEl.querySelector('.card-input');
+                const favBtn = cardEl.querySelector('.favorite-toggle');
+                const speakBtn = cardEl.querySelector('.speak-word');
+                const fr = cardEl.dataset.fr;
+                const en = cardEl.dataset.en;
+                const key = fr + '||' + en;
+
+                // 点击单词: 切换隐藏/显示 (模糊/清晰)
+                wordEl.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const hidden = this.dataset.hidden === 'true';
+                    if (hidden) {
+                        // 变为清晰: 移除 hidden 类和所有 blur-* 类
+                        this.dataset.hidden = 'false';
+                        this.classList.remove('hidden');
+                        this.classList.remove('blur-1', 'blur-2', 'blur-3', 'blur-4', 'blur-5', 'blur-6', 'blur-7', 'blur-8', 'blur-9', 'blur-10');
+                        this.style.filter = 'blur(0px)';
+                    } else {
+                        // 变为模糊: 添加 hidden 和 blur-8 (模糊到看不清)
+                        this.dataset.hidden = 'true';
+                        this.classList.add('hidden');
+                        // 确保 blur 类存在
+                        this.classList.add('blur-8');
+                        this.style.filter = '';
+                    }
+                });
+
+                // 输入框实时判断 (与主显示比较)
+                inputEl.addEventListener('input', function() {
+                    const userInput = this.value.trim();
+                    const mainText = langMode === 'fr' ? fr : en;
+                    if (userInput === '') {
+                        this.classList.remove('correct', 'wrong');
+                        return;
+                    }
+                    const normalizedInput = userInput.toLowerCase().trim();
+                    const normalizedTarget = mainText.toLowerCase().trim();
+                    if (normalizedInput === normalizedTarget) {
+                        this.classList.remove('wrong');
+                        this.classList.add('correct');
+                    } else {
+                        this.classList.remove('correct');
+                        this.classList.add('wrong');
+                    }
+                });
+
+                // 收藏
+                favBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const key = fr + '||' + en;
+                    if (favorites.has(key)) {
+                        favorites.delete(key);
+                        this.textContent = '☆';
+                    } else {
+                        favorites.add(key);
+                        this.textContent = '⭐';
+                    }
+                    updateExportArea();
+                });
+
+                // 发音
+                speakBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const textToSpeak = langMode === 'fr' ? fr : en;
+                    speakText(textToSpeak, 'fr-CA');
+                });
+            });
+
+            updateStats();
+        }
+
+        // 语音合成
+        function speakText(text, langCode = 'fr-CA') {
+            if (!window.speechSynthesis) {
+                alert('您的浏览器不支持 Speech Synthesis');
+                return;
+            }
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = langCode;
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+            const voices = window.speechSynthesis.getVoices();
+            let selectedVoice = voices.find(v => v.lang === 'fr-CA');
+            if (!selectedVoice) {
+                selectedVoice = voices.find(v => v.lang.startsWith('fr'));
+            }
+            if (selectedVoice) utterance.voice = selectedVoice;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // 更新导出区域
+        function updateExportArea() {
+            const favArray = Array.from(favorites);
+            if (favArray.length === 0) {
+                exportArea.value = '暂无收藏卡片';
+                return;
+            }
+            const lines = favArray.map(key => {
+                const [fr, en] = key.split('||');
+                return `${fr}\t${en}`;
+            });
+            exportArea.value = lines.join('\n');
+        }
+
+        function exportFavorites() {
+            updateExportArea();
+        }
+
+        function clearFavorites() {
+            if (favorites.size === 0) return;
+            favorites.clear();
+            document.querySelectorAll('.favorite-toggle').forEach(el => {
+                el.textContent = '☆';
+            });
+            updateExportArea();
+        }
+
+        function copyExport() {
+            const text = exportArea.value;
+            if (!text || text === '暂无收藏卡片') {
+                alert('没有收藏卡片可复制');
+                return;
+            }
+            navigator.clipboard?.writeText(text).then(() => {
+                alert('已复制到剪贴板');
+            }).catch(() => {
+                exportArea.select();
+                document.execCommand('copy');
+                alert('已复制');
+            });
+        }
+
+        // 切换语言模式 (法/英)
+        function toggleLang() {
+            langMode = (langMode === 'fr') ? 'en' : 'fr';
+            toggleLangBtn.textContent = langMode === 'fr' ? '🇫🇷/🇬🇧 EN' : '🇬🇧/🇫🇷 FR';
+            // 重新渲染卡片以切换主显示
+            renderCards();
+        }
+
+        // 切换显示英语 (显示/隐藏卡片下方)
+        function toggleEnVisibility() {
+            showEn = !showEn;
+            toggleEnBtn.textContent = showEn ? '📖 隐藏EN' : '📖 显示EN';
+            document.querySelectorAll('.card-en').forEach(el => {
+                if (showEn) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+        }
+
+        // 全局发音 (朗读第一张卡片)
+        function speakAll() {
+            if (orderedCards.length === 0) return;
+            const first = orderedCards[0];
+            const text = langMode === 'fr' ? first.fr : first.en;
+            speakText(text, 'fr-CA');
+        }
+
+        // 初始化语音
+        if (window.speechSynthesis) {
+            window.speechSynthesis.getVoices();
+            window.speechSynthesis.onvoiceschanged = () => {
+                window.speechSynthesis.getVoices();
+            };
+        }
+
+        // ----- 事件绑定 -----
+        generateBtn.addEventListener('click', generateCards);
+        speakBtn.addEventListener('click', speakAll);
+        toggleLangBtn.addEventListener('click', toggleLang);
+        toggleEnBtn.addEventListener('click', toggleEnVisibility);
+        favoriteExportBtn.addEventListener('click', exportFavorites);
+        clearFavBtn.addEventListener('click', function() {
+            clearFavorites();
+            document.querySelectorAll('.favorite-toggle').forEach(el => el.textContent = '☆');
+        });
+        copyExportBtn.addEventListener('click', copyExport);
+
+        // 默认加载
+        generateCards();
+        updateExportArea();
+    })();
+</script>
+</body>
+</html>
